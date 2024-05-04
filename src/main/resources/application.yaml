@@ -5,7 +5,17 @@ logging:
     org.springframework.cloud.gateway.handler.predicate: trace
 
 spring:
+  application:
+    name: gateway
   cloud:
+    loadbalancer:
+      ribbon:
+        enabled: false
+    consul:
+      host: 192.168.0.109
+      enabled: true
+      discovery:
+        query-passing: true
     gateway:
       globalcors:
         add-to-simple-url-handler-mapping: true
@@ -19,12 +29,16 @@ spring:
               - OPTIONS
       routes:
         - id: multiplication
-          uri: http://localhost:8080/
+          uri: lb://multiplication/
           predicates:
             - Path=/challenges/**,/attempts,/attempts/**,/users/**
         - id: gamification
-          uri: http://localhost:8081/
+          uri: lb://gamification/
           predicates:
             - Path=/leaders
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+        - name: Retry
+          args:
+            retries: 3
+            methods: GET,POST
